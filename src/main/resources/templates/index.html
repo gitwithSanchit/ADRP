@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Document Processor</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+<div class="container">
+    <h1>Automatic Document Processing</h1>
+
+    <div class="upload-card">
+        <p>Upload PDF, DOC or TXT file</p>
+
+        <form method="post" enctype="multipart/form-data" th:action="@{/upload}">
+            <label for="level">Select Summary Level</label>
+            <select name="level" id="level" required style="margin-bottom: 15px; padding: 6px 10px;">
+                <option value="short">Short (2 sentences)</option>
+                <option value="medium">Medium (4 sentences)</option>
+                <option value="detailed">Detailed (7 sentences)</option>
+            </select>
+
+            <input type="file" name="file" required>
+            <button type="submit">Upload & Process</button>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>
