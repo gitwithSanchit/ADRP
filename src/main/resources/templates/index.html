@@ -2,30 +2,367 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Document Processor</title>
-    <link rel="stylesheet" href="/styles.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Upload | ADRP System</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #6366f1;       /* Indigo */
+            --primary-dark: #4f46e5;
+            --surface: #ffffff;
+            --bg-body: #f8fafc;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-body);
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 24px 24px; /* Grid Pattern */
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: var(--text-main);
+        }
+
+        /* --- Animations --- */
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-up {
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0;
+        }
+
+        /* --- Navbar --- */
+        .navbar {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.6);
+            padding: 1rem 0;
+        }
+
+        /* --- Mac Window Card --- */
+        .window-card {
+            background: var(--surface);
+            border-radius: 16px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            max-width: 600px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .window-header {
+            background: #f8fafc;
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .mac-buttons {
+            display: flex;
+            gap: 6px;
+        }
+        .mac-dot { width: 12px; height: 12px; border-radius: 50%; }
+        .mac-red { background: #ef4444; }
+        .mac-yellow { background: #f59e0b; }
+        .mac-green { background: #22c55e; }
+
+        /* --- Selection Cards --- */
+        .selector-card {
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            background: #fff;
+            position: relative;
+        }
+
+        .selector-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .btn-check:checked + .selector-card {
+            border-color: var(--primary);
+            background-color: #eef2ff;
+            box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.1);
+        }
+
+        .btn-check:checked + .selector-card .icon-box {
+            background-color: var(--primary);
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .btn-check:checked + .selector-card .text-label {
+            color: var(--primary-dark);
+        }
+
+        .icon-box {
+            width: 42px; height: 42px;
+            background-color: #f1f5f9;
+            color: var(--text-muted);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            margin-bottom: 8px;
+        }
+
+        /* --- Drop Zone --- */
+        .drop-zone {
+            border: 2px dashed #cbd5e1;
+            border-radius: 16px;
+            padding: 2.5rem 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: #f8fafc;
+            position: relative;
+        }
+
+        .drop-zone:hover, .drop-zone.dragover {
+            border-color: var(--primary);
+            background-color: #eef2ff;
+            transform: scale(1.01);
+        }
+
+        .drop-zone.dragover {
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        }
+
+        .file-input-hidden {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0; cursor: pointer;
+        }
+
+        /* --- Button --- */
+        .btn-process {
+            background: var(--primary);
+            color: white;
+            padding: 14px;
+            font-weight: 600;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.3);
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .btn-process:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.4);
+        }
+
+        .status-dot {
+            width: 8px; height: 8px;
+            background-color: #22c55e;
+            border-radius: 50%;
+            box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+            70% { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        }
+
+    </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>Automatic Document Processing</h1>
+<nav class="navbar navbar-expand-lg fixed-top">
+    <div class="container">
+        <a class="navbar-brand d-flex align-items-center" href="#">
+            <div class="bg-dark text-white rounded-3 d-flex align-items-center justify-content-center me-2 shadow-sm" style="width: 36px; height: 36px;">
+                <i class="fas fa-layer-group fa-sm"></i>
+            </div>
+            <span class="fw-bold text-dark tracking-tight">ADRP</span>
+        </a>
 
-    <div class="upload-card">
-        <p>Upload PDF, DOC or TXT file</p>
+        <div class="d-flex align-items-center gap-2 border px-3 py-1 rounded-pill bg-white">
+            <div class="status-dot"></div>
+            <span class="small fw-semibold text-muted">System Online</span>
+        </div>
+    </div>
+</nav>
 
-        <form method="post" enctype="multipart/form-data" th:action="@{/upload}">
-            <label for="level">Select Summary Level</label>
-            <select name="level" id="level" required style="margin-bottom: 15px; padding: 6px 10px;">
-                <option value="short">Short (2 sentences)</option>
-                <option value="medium">Medium (4 sentences)</option>
-                <option value="detailed">Detailed (7 sentences)</option>
-            </select>
+<div class="container flex-grow-1 d-flex align-items-center justify-content-center" style="margin-top: 80px;">
 
-            <input type="file" name="file" required>
-            <button type="submit">Upload & Process</button>
-        </form>
+    <div class="col-12 animate-up">
+
+        <div class="text-center mb-5">
+            <h1 class="fw-bold text-dark mb-2">New Analysis</h1>
+            <p class="text-muted">Upload a document to generate an AI-powered summary.</p>
+        </div>
+
+        <div class="window-card">
+
+            <div class="window-header">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="mac-buttons">
+                        <div class="mac-dot mac-red"></div>
+                        <div class="mac-dot mac-yellow"></div>
+                        <div class="mac-dot mac-green"></div>
+                    </div>
+                    <span class="small fw-bold text-muted">Upload Console</span>
+                </div>
+                <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-2">v2.0</span>
+            </div>
+
+            <div class="p-4 p-md-5">
+                <form method="post" enctype="multipart/form-data" th:action="@{/upload}" id="uploadForm">
+
+                    <label class="d-block text-xs fw-bold text-muted text-uppercase mb-3 ps-1">
+                        Select Precision Level
+                    </label>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-4">
+                            <input type="radio" class="btn-check" name="level" id="short" value="short">
+                            <label class="selector-card text-center p-3 w-100 h-100 d-flex flex-column align-items-center" for="short">
+                                <div class="icon-box"><i class="fas fa-bolt"></i></div>
+                                <span class="small fw-bold text-label">Short</span>
+                                <span class="d-none d-md-block text-muted text-xs" style="font-size: 0.7rem;">Quick Scan</span>
+                            </label>
+                        </div>
+
+                        <div class="col-4">
+                            <input type="radio" class="btn-check" name="level" id="medium" value="medium" checked>
+                            <label class="selector-card text-center p-3 w-100 h-100 d-flex flex-column align-items-center" for="medium">
+                                <div class="icon-box"><i class="fas fa-file-lines"></i></div>
+                                <span class="small fw-bold text-label">Medium</span>
+                                <span class="d-none d-md-block text-muted text-xs" style="font-size: 0.7rem;">Balanced</span>
+                            </label>
+                        </div>
+
+                        <div class="col-4">
+                            <input type="radio" class="btn-check" name="level" id="detailed" value="detailed">
+                            <label class="selector-card text-center p-3 w-100 h-100 d-flex flex-column align-items-center" for="detailed">
+                                <div class="icon-box"><i class="fas fa-book-open"></i></div>
+                                <span class="small fw-bold text-label">Deep</span>
+                                <span class="d-none d-md-block text-muted text-xs" style="font-size: 0.7rem;">Full Report</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <label class="d-block text-xs fw-bold text-muted text-uppercase mb-3 ps-1">
+                        Source Document
+                    </label>
+
+                    <div class="drop-zone mb-4" id="dropZone">
+                        <input type="file" name="file" id="fileInput" class="file-input-hidden" required>
+                        <div class="text-center">
+                            <div class="mb-3">
+                                <i class="fas fa-cloud-arrow-up fa-3x text-muted" id="fileIcon"></i>
+                            </div>
+                            <h6 class="fw-bold text-dark mb-1" id="fileName">Drop file here or click to browse</h6>
+                            <p class="text-muted small mb-0">Support for PDF, DOCX, TXT</p>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-process w-100" id="submitBtn">
+                        <span id="btnText"><i class="fas fa-wand-magic-sparkles me-2"></i>Generate Analysis</span>
+                        <div id="btnSpinner" class="spinner-border spinner-border-sm text-white d-none" role="status"></div>
+                    </button>
+
+                </form>
+            </div>
+
+            <div class="bg-light p-3 text-center border-top">
+                <span class="small text-muted">
+                    <i class="fas fa-lock me-1"></i> Files are encrypted and auto-deleted after 24h
+                </span>
+            </div>
+
+        </div>
     </div>
 </div>
 
+<script>
+    const fileInput = document.getElementById('fileInput');
+    const dropZone = document.getElementById('dropZone');
+    const fileName = document.getElementById('fileName');
+    const fileIcon = document.getElementById('fileIcon');
+    const uploadForm = document.getElementById('uploadForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const btnText = document.getElementById('btnText');
+    const btnSpinner = document.getElementById('btnSpinner');
+
+    // 1. File Selection Logic
+    fileInput.addEventListener('change', function(e) {
+        handleFiles(this.files);
+    });
+
+    // 2. Drag & Drop Visuals + Logic
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false);
+    });
+
+    dropZone.addEventListener('drop', handleDrop, false);
+
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        fileInput.files = files; // Assign dropped files to input
+        handleFiles(files);
+    }
+
+    function handleFiles(files) {
+        if (files && files[0]) {
+            fileName.textContent = files[0].name;
+            fileName.classList.add('text-primary');
+            dropZone.style.borderColor = '#6366f1';
+            dropZone.style.backgroundColor = '#eef2ff';
+
+            // Change icon based on file type
+            if(files[0].name.endsWith('.pdf')) {
+                fileIcon.className = 'fas fa-file-pdf fa-3x text-danger mb-3';
+            } else if(files[0].name.match(/\.(doc|docx)$/)) {
+                fileIcon.className = 'fas fa-file-word fa-3x text-primary mb-3';
+            } else {
+                fileIcon.className = 'fas fa-file-alt fa-3x text-dark mb-3';
+            }
+        }
+    }
+
+    // 3. Button Loading State
+    uploadForm.addEventListener('submit', function() {
+        submitBtn.disabled = true;
+        submitBtn.style.opacity = "0.8";
+        btnText.textContent = "Analyzing Document...";
+        btnSpinner.classList.remove('d-none');
+    });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
