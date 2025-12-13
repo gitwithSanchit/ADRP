@@ -3,366 +3,506 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Upload | ADRP System</title>
+    <title>ADRP | Intelligent Document Analysis</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <style>
+        /* --- 1. DESIGN TOKENS --- */
         :root {
-            --primary: #6366f1;       /* Indigo */
-            --primary-dark: #4f46e5;
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --primary-light: #eef2ff;
+            --primary-glow: rgba(79, 70, 229, 0.4);
+
             --surface: #ffffff;
+            --surface-card: #ffffff;
             --bg-body: #f8fafc;
+            --border: #e2e8f0;
+
             --text-main: #0f172a;
             --text-muted: #64748b;
-            --border-color: #e2e8f0;
+
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+
+            --radius: 16px;
         }
 
+        /* --- DARK MODE (Deep Navy / Glass) --- */
+        [data-theme="dark"] {
+            --primary: #818cf8;
+            --primary-hover: #6366f1;
+            --primary-light: rgba(99, 102, 241, 0.15);
+            --primary-glow: rgba(129, 140, 248, 0.3);
+
+            --surface: #0f172a;       /* Deepest Navy */
+            --surface-card: #1e293b;  /* Slate 800 */
+            --bg-body: #020617;       /* Almost Black */
+            --border: #334155;        /* Slate 700 */
+
+            --text-main: #f8fafc;     /* White */
+            --text-muted: #94a3b8;    /* Slate 400 */
+
+            --shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        /* --- 2. BASE STYLES --- */
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
             background-color: var(--bg-body);
-            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
-            background-size: 24px 24px; /* Grid Pattern */
+            color: var(--text-main);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            color: var(--text-main);
+            overflow-x: hidden;
+            transition: background 0.4s ease, color 0.4s ease;
         }
 
-        /* --- Animations --- */
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-up {
-            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            opacity: 0;
-        }
-
-        /* --- Navbar --- */
         .navbar {
-            background: rgba(255, 255, 255, 0.8);
+            background: rgba(var(--surface), 0.8);
             backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(226, 232, 240, 0.6);
-            padding: 1rem 0;
+            border-bottom: 1px solid var(--border);
+            height: 72px;
+            z-index: 100;
+            transition: border-color 0.4s ease, background 0.4s ease;
         }
 
-        /* --- Mac Window Card --- */
-        .window-card {
-            background: var(--surface);
-            border-radius: 16px;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-            border: 1px solid var(--border-color);
-            overflow: hidden;
-            max-width: 600px;
-            width: 100%;
-            margin: 0 auto;
-        }
-
-        .window-header {
-            background: #f8fafc;
-            padding: 12px 20px;
-            border-bottom: 1px solid var(--border-color);
+        /* --- 3. LAYOUT & HERO --- */
+        .dashboard-container {
+            margin-top: 72px;
+            min-height: calc(100vh - 72px);
             display: flex;
-            align-items: center;
-            justify-content: space-between;
         }
 
-        .mac-buttons {
-            display: flex;
-            gap: 6px;
-        }
-        .mac-dot { width: 12px; height: 12px; border-radius: 50%; }
-        .mac-red { background: #ef4444; }
-        .mac-yellow { background: #f59e0b; }
-        .mac-green { background: #22c55e; }
-
-        /* --- Selection Cards --- */
-        .selector-card {
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            background: #fff;
+        /* Left Panel (Information) */
+        .hero-section {
+            background-color: var(--surface);
+            border-right: 1px solid var(--border);
             position: relative;
+            overflow: hidden;
+            transition: background 0.4s ease, border-color 0.4s ease;
         }
 
+        /* Animated Blobs */
+        .hero-blob {
+            position: absolute;
+            filter: blur(90px);
+            opacity: 0.5;
+            z-index: 0;
+            border-radius: 50%;
+            animation: blobFloat 12s infinite alternate cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .blob-1 { top: -10%; left: -10%; width: 600px; height: 600px; background: radial-gradient(circle, var(--primary-light), transparent 70%); }
+        .blob-2 { bottom: -10%; right: -10%; width: 500px; height: 500px; background: radial-gradient(circle, rgba(16, 185, 129, 0.1), transparent 70%); animation-delay: -5s; }
+
+        @keyframes blobFloat {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(30px, -30px) scale(1.1); }
+        }
+
+        /* --- 4. COMPONENTS --- */
+
+        /* The Upload Card */
+        .app-card {
+            background: var(--surface-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 500px;
+            position: relative;
+            z-index: 10;
+            transition: all 0.3s ease;
+        }
+
+        /* Ambient Glow behind the card */
+        .card-glow {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 120%; height: 120%;
+            background: radial-gradient(circle, var(--primary-glow) 0%, transparent 60%);
+            opacity: 0.5;
+            z-index: 0;
+            pointer-events: none;
+            filter: blur(60px);
+        }
+
+        /* Feature List Items */
+        .feature-item {
+            display: flex; gap: 1rem; align-items: flex-start;
+            padding: 1.25rem;
+            background: var(--surface-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+        .feature-item:hover {
+            transform: translateY(-4px);
+            border-color: var(--primary);
+            box-shadow: var(--shadow-lg);
+        }
+        .feature-icon {
+            min-width: 42px; height: 42px; border-radius: 10px;
+            background: var(--primary-light); color: var(--primary);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        /* --- 5. FORM ELEMENTS --- */
+
+        /* Radio Selection Cards */
+        .selector-card {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem;
+            cursor: pointer;
+            background: var(--surface-card);
+            text-align: center;
+            transition: all 0.2s ease;
+            height: 100%;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
         .selector-card:hover {
             border-color: var(--primary);
             transform: translateY(-2px);
         }
-
         .btn-check:checked + .selector-card {
             border-color: var(--primary);
-            background-color: #eef2ff;
-            box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.1);
+            background-color: var(--primary-light);
+            box-shadow: inset 0 0 0 2px var(--primary);
+            color: var(--primary);
         }
 
-        .btn-check:checked + .selector-card .icon-box {
-            background-color: var(--primary);
-            color: white;
-            transform: scale(1.1);
-        }
-
-        .btn-check:checked + .selector-card .text-label {
-            color: var(--primary-dark);
-        }
-
-        .icon-box {
-            width: 42px; height: 42px;
-            background-color: #f1f5f9;
-            color: var(--text-muted);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s;
-            margin-bottom: 8px;
-        }
-
-        /* --- Drop Zone --- */
+        /* File Drop Zone */
         .drop-zone {
-            border: 2px dashed #cbd5e1;
-            border-radius: 16px;
-            padding: 2.5rem 1.5rem;
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 3rem 2rem;
             text-align: center;
-            transition: all 0.3s ease;
             cursor: pointer;
-            background: #f8fafc;
-            position: relative;
+            background: var(--surface-card); /* Ensures consistent color in dark mode */
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-
-        .drop-zone:hover, .drop-zone.dragover {
+        .drop-zone:hover {
             border-color: var(--primary);
-            background-color: #eef2ff;
-            transform: scale(1.01);
+            background: var(--primary-light);
+            transform: scale(1.02);
         }
-
         .drop-zone.dragover {
-            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+            border-color: var(--primary);
+            background: var(--primary-light);
+            transform: scale(1.02);
+            box-shadow: 0 0 20px var(--primary-glow);
         }
 
-        .file-input-hidden {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            opacity: 0; cursor: pointer;
-        }
-
-        /* --- Button --- */
-        .btn-process {
+        /* Buttons */
+        .btn-primary-custom {
             background: var(--primary);
             color: white;
-            padding: 14px;
-            font-weight: 600;
+            padding: 14px 28px;
             border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.3);
+            font-weight: 600;
             border: none;
-            transition: all 0.2s;
+            width: 100%;
+            font-size: 1rem;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px var(--primary-glow);
+        }
+        .btn-primary-custom:hover:not(:disabled) {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px var(--primary-glow);
+        }
+        .btn-primary-custom:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            background: var(--text-muted);
+            box-shadow: none;
         }
 
-        .btn-process:hover {
-            background: var(--primary-dark);
-            transform: translateY(-1px);
-            box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.4);
-        }
-
-        .status-dot {
-            width: 8px; height: 8px;
-            background-color: #22c55e;
+        /* Theme Toggle */
+        .btn-theme {
+            width: 42px; height: 42px;
             border-radius: 50%;
-            box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
-            animation: pulse 2s infinite;
+            border: 1px solid var(--border);
+            background: var(--surface-card);
+            color: var(--text-muted);
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .btn-theme:hover {
+            color: var(--primary);
+            border-color: var(--primary);
+            transform: rotate(15deg) scale(1.1);
         }
 
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
-            70% { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
-        }
+        /* --- 6. ANIMATIONS --- */
+        .animate-up { animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 
+        /* Scanner Overlay */
+        .scanner-overlay {
+            position: fixed; inset: 0;
+            background: rgba(2, 6, 23, 0.9); /* Deepest navy blur */
+            z-index: 2000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.4s ease;
+            backdrop-filter: blur(12px);
+        }
+        .scanner-overlay.active { opacity: 1; pointer-events: all; }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
     </style>
+
+    <script>
+        // Critical: Apply theme before body renders to prevent flash
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        }
+    </script>
 </head>
 <body>
 
 <nav class="navbar navbar-expand-lg fixed-top">
-    <div class="container">
-        <a class="navbar-brand d-flex align-items-center" href="#">
-            <div class="bg-dark text-white rounded-3 d-flex align-items-center justify-content-center me-2 shadow-sm" style="width: 36px; height: 36px;">
-                <i class="fas fa-layer-group fa-sm"></i>
+    <div class="container-fluid px-4">
+        <a class="navbar-brand d-flex align-items-center gap-2" href="#">
+            <div class="bg-primary text-white rounded-3 d-flex align-items-center justify-content-center shadow-sm" style="width: 36px; height: 36px;">
+                <i class="fas fa-cube"></i>
             </div>
-            <span class="fw-bold text-dark tracking-tight">ADRP</span>
+            <span class="fw-bold tracking-tight" style="color: var(--text-main)">ADRP <span class="fw-normal text-muted ms-1 opacity-75">Workspace</span></span>
         </a>
 
-        <div class="d-flex align-items-center gap-2 border px-3 py-1 rounded-pill bg-white">
-            <div class="status-dot"></div>
-            <span class="small fw-semibold text-muted">System Online</span>
+        <div class="d-flex align-items-center gap-3">
+            <div class="d-none d-md-flex align-items-center gap-2 border px-3 py-1 rounded-pill" style="background: var(--surface-card); border-color: var(--border) !important;">
+                <div class="status-dot" style="width:8px; height:8px; background:#22c55e; border-radius:50%; box-shadow:0 0 0 2px rgba(34,197,94,0.2);"></div>
+                <span class="small fw-semibold" style="color: var(--text-muted)">System Online</span>
+            </div>
+            <button class="btn-theme shadow-sm" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle Theme">
+                <i class="fas fa-moon"></i>
+            </button>
         </div>
     </div>
 </nav>
 
-<div class="container flex-grow-1 d-flex align-items-center justify-content-center" style="margin-top: 80px;">
+<div class="container-fluid dashboard-container">
+    <div class="row w-100 m-0 h-100">
 
-    <div class="col-12 animate-up">
+        <div class="col-lg-7 p-5 hero-section d-none d-lg-flex flex-column justify-content-center animate-up">
 
-        <div class="text-center mb-5">
-            <h1 class="fw-bold text-dark mb-2">New Analysis</h1>
-            <p class="text-muted">Upload a document to generate an AI-powered summary.</p>
-        </div>
+            <div class="hero-blob blob-1"></div>
+            <div class="hero-blob blob-2"></div>
 
-        <div class="window-card">
-
-            <div class="window-header">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="mac-buttons">
-                        <div class="mac-dot mac-red"></div>
-                        <div class="mac-dot mac-yellow"></div>
-                        <div class="mac-dot mac-green"></div>
+            <div class="pe-lg-5" style="z-index: 1;">
+                <div class="mb-5">
+                    <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill mb-3 border border-primary border-opacity-10" style="background: var(--surface-card); color: var(--primary);">
+                        <span class="fw-bold small">v2.1</span>
+                        <span class="small fw-semibold border-start border-primary border-opacity-25 ps-2">TextRank + Transformers</span>
                     </div>
-                    <span class="small fw-bold text-muted">Upload Console</span>
+                    <h1 class="fw-extrabold display-5 mb-3" style="color: var(--text-main); letter-spacing: -1px;">
+                        Enterprise Grade <br><span style="color: var(--primary)">Document Intelligence.</span>
+                    </h1>
+                    <p class="lead" style="color: var(--text-muted); font-size: 1.15rem; line-height: 1.6;">
+                        Upload PDF, Word, or Text files. Get AI-powered summaries, sentiment analysis, and keyword extraction in seconds.
+                    </p>
                 </div>
-                <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-2">v2.0</span>
-            </div>
 
-            <div class="p-4 p-md-5">
-                <form method="post" enctype="multipart/form-data" th:action="@{/upload}" id="uploadForm">
-
-                    <label class="d-block text-xs fw-bold text-muted text-uppercase mb-3 ps-1">
-                        Select Precision Level
-                    </label>
-
-                    <div class="row g-3 mb-4">
-                        <div class="col-4">
-                            <input type="radio" class="btn-check" name="level" id="short" value="short">
-                            <label class="selector-card text-center p-3 w-100 h-100 d-flex flex-column align-items-center" for="short">
-                                <div class="icon-box"><i class="fas fa-bolt"></i></div>
-                                <span class="small fw-bold text-label">Short</span>
-                                <span class="d-none d-md-block text-muted text-xs" style="font-size: 0.7rem;">Quick Scan</span>
-                            </label>
-                        </div>
-
-                        <div class="col-4">
-                            <input type="radio" class="btn-check" name="level" id="medium" value="medium" checked>
-                            <label class="selector-card text-center p-3 w-100 h-100 d-flex flex-column align-items-center" for="medium">
-                                <div class="icon-box"><i class="fas fa-file-lines"></i></div>
-                                <span class="small fw-bold text-label">Medium</span>
-                                <span class="d-none d-md-block text-muted text-xs" style="font-size: 0.7rem;">Balanced</span>
-                            </label>
-                        </div>
-
-                        <div class="col-4">
-                            <input type="radio" class="btn-check" name="level" id="detailed" value="detailed">
-                            <label class="selector-card text-center p-3 w-100 h-100 d-flex flex-column align-items-center" for="detailed">
-                                <div class="icon-box"><i class="fas fa-book-open"></i></div>
-                                <span class="small fw-bold text-label">Deep</span>
-                                <span class="d-none d-md-block text-muted text-xs" style="font-size: 0.7rem;">Full Report</span>
-                            </label>
-                        </div>
+                <div class="row g-4 mb-5">
+                    <div class="col-auto">
+                        <h3 class="fw-bold m-0" style="color: var(--text-main)" id="docCounter">12,402</h3>
+                        <p class="small text-muted text-uppercase fw-bold m-0" style="letter-spacing: 0.5px;">Docs Processed</p>
                     </div>
+                    <div class="col-auto border-start border-secondary opacity-25"></div>
+                    <div class="col-auto">
+                        <h3 class="fw-bold m-0" style="color: var(--text-main)">99.9%</h3>
+                        <p class="small text-muted text-uppercase fw-bold m-0" style="letter-spacing: 0.5px;">Accuracy</p>
+                    </div>
+                </div>
 
-                    <label class="d-block text-xs fw-bold text-muted text-uppercase mb-3 ps-1">
-                        Source Document
-                    </label>
-
-                    <div class="drop-zone mb-4" id="dropZone">
-                        <input type="file" name="file" id="fileInput" class="file-input-hidden" required>
-                        <div class="text-center">
-                            <div class="mb-3">
-                                <i class="fas fa-cloud-arrow-up fa-3x text-muted" id="fileIcon"></i>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-brain"></i></div>
+                            <div>
+                                <h6 class="fw-bold mb-1" style="color: var(--text-main)">Neural Engine</h6>
+                                <p class="small mb-0" style="color: var(--text-muted)">Abstractive summarization via BART.</p>
                             </div>
-                            <h6 class="fw-bold text-dark mb-1" id="fileName">Drop file here or click to browse</h6>
-                            <p class="text-muted small mb-0">Support for PDF, DOCX, TXT</p>
                         </div>
                     </div>
-
-                    <button type="submit" class="btn btn-primary btn-process w-100" id="submitBtn">
-                        <span id="btnText"><i class="fas fa-wand-magic-sparkles me-2"></i>Generate Analysis</span>
-                        <div id="btnSpinner" class="spinner-border spinner-border-sm text-white d-none" role="status"></div>
-                    </button>
-
-                </form>
+                    <div class="col-md-6">
+                        <div class="feature-item">
+                            <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
+                            <div>
+                                <h6 class="fw-bold mb-1" style="color: var(--text-main)">Local Processing</h6>
+                                <p class="small mb-0" style="color: var(--text-muted)">100% Private. Zero data retention.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-
-            <div class="bg-light p-3 text-center border-top">
-                <span class="small text-muted">
-                    <i class="fas fa-lock me-1"></i> Files are encrypted and auto-deleted after 24h
-                </span>
-            </div>
-
         </div>
+
+        <div class="col-lg-5 p-4 d-flex align-items-center justify-content-center animate-up" style="animation-delay: 0.1s; background-color: var(--bg-body);">
+
+            <div style="position: relative; width: 100%; max-width: 500px;">
+                <div class="card-glow"></div>
+
+                <div class="app-card">
+                    <div class="mb-4">
+                        <h4 class="fw-bold mb-1" style="color: var(--text-main)">Analyze Document</h4>
+                        <p class="small mb-0" style="color: var(--text-muted)">Configure your analysis settings below.</p>
+                    </div>
+
+                    <form method="post" enctype="multipart/form-data" th:action="@{/upload}" id="uploadForm">
+
+                        <div class="mb-4">
+                            <label class="d-block text-xs fw-bold text-uppercase mb-2 ps-1" style="color: var(--text-muted); font-size: 0.75rem; letter-spacing: 0.5px;">1. Detail Level</label>
+                            <div class="row g-2">
+                                <div class="col-4">
+                                    <input type="radio" class="btn-check" name="level" id="short" value="short">
+                                    <label class="selector-card" for="short">
+                                        <i class="fas fa-bolt mb-2 d-block" style="color: var(--text-muted)"></i>
+                                        <span class="small fw-bold">Fast</span>
+                                    </label>
+                                </div>
+                                <div class="col-4">
+                                    <input type="radio" class="btn-check" name="level" id="medium" value="medium" checked>
+                                    <label class="selector-card" for="medium">
+                                        <i class="fas fa-file-alt mb-2 d-block" style="color: var(--text-muted)"></i>
+                                        <span class="small fw-bold">Standard</span>
+                                    </label>
+                                </div>
+                                <div class="col-4">
+                                    <input type="radio" class="btn-check" name="level" id="detailed" value="detailed">
+                                    <label class="selector-card" for="detailed">
+                                        <i class="fas fa-layer-group mb-2 d-block" style="color: var(--text-muted)"></i>
+                                        <span class="small fw-bold">Deep</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="d-block text-xs fw-bold text-uppercase mb-2 ps-1" style="color: var(--text-muted); font-size: 0.75rem; letter-spacing: 0.5px;">2. Upload File</label>
+                            <div class="drop-zone" id="dropZone">
+                                <input type="file" name="file" id="fileInput" class="d-none" required>
+                                <div class="text-center">
+                                    <div class="mb-3 transition-icon">
+                                        <i class="fas fa-cloud-upload-alt fa-3x" style="color: var(--text-muted); transition: all 0.3s;" id="fileIcon"></i>
+                                    </div>
+                                    <h6 class="fw-bold mb-0" style="color: var(--text-main)" id="fileName">Click to Browse</h6>
+                                    <p class="small mb-0 mt-1" style="color: var(--text-muted)" id="fileMeta">PDF, DOCX, TXT</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary-custom" id="submitBtn" disabled>
+                            Start Analysis <i class="fas fa-arrow-right ms-2"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
 
+<div class="scanner-overlay" id="scannerOverlay">
+    <div class="text-center text-white">
+        <div class="spinner-border text-primary mb-4" style="width: 3rem; height: 3rem; border-width: 4px;"></div>
+        <h3 class="fw-bold">Processing...</h3>
+        <p class="opacity-75 font-monospace small">EXTRACTING_TEXT | RUNNING_NEURAL_NET | GENERATING_REPORT</p>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+    // 1. Theme Logic
+    function toggleTheme() {
+        const html = document.documentElement;
+        const icon = document.querySelector('#themeToggle i');
+        const isDark = html.getAttribute('data-theme') === 'dark';
+
+        if (isDark) {
+            html.removeAttribute('data-theme');
+            icon.classList.replace('fa-sun', 'fa-moon');
+            localStorage.setItem('theme', 'light');
+        } else {
+            html.setAttribute('data-theme', 'dark');
+            icon.classList.replace('fa-moon', 'fa-sun');
+            localStorage.setItem('theme', 'dark');
+        }
+    }
+    if (localStorage.getItem('theme') === 'dark') document.querySelector('#themeToggle i').classList.replace('fa-moon', 'fa-sun');
+
+    // 2. Animated Counter
+    const counterEl = document.getElementById('docCounter');
+    let count = 12402;
+    setInterval(() => {
+        count += Math.floor(Math.random() * 2);
+        counterEl.innerText = count.toLocaleString();
+    }, 4000);
+
+    // 3. File Upload Logic
     const fileInput = document.getElementById('fileInput');
     const dropZone = document.getElementById('dropZone');
     const fileName = document.getElementById('fileName');
+    const fileMeta = document.getElementById('fileMeta');
     const fileIcon = document.getElementById('fileIcon');
-    const uploadForm = document.getElementById('uploadForm');
     const submitBtn = document.getElementById('submitBtn');
-    const btnText = document.getElementById('btnText');
-    const btnSpinner = document.getElementById('btnSpinner');
 
-    // 1. File Selection Logic
-    fileInput.addEventListener('change', function(e) {
-        handleFiles(this.files);
-    });
+    dropZone.addEventListener('click', () => fileInput.click());
 
-    // 2. Drag & Drop Visuals + Logic
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        dropZone.addEventListener(eventName, preventDefaults, false);
-    });
+    fileInput.addEventListener('change', () => {
+        if(fileInput.files[0]) {
+            const file = fileInput.files[0];
+            fileName.textContent = file.name;
+            fileName.style.color = 'var(--primary)';
 
-    function preventDefaults(e) {
-        e.preventDefault();
-        e.stopPropagation();
-    }
+            // Format size
+            const fileSize = (file.size / 1024 / 1024).toFixed(2);
+            fileMeta.textContent = fileSize + " MB • Ready";
+            fileMeta.style.color = 'var(--success)';
 
-    ['dragenter', 'dragover'].forEach(eventName => {
-        dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false);
-    });
+            // Visuals
+            dropZone.style.borderColor = 'var(--primary)';
+            dropZone.style.backgroundColor = 'var(--primary-light)';
+            fileIcon.className = 'fas fa-check-circle fa-3x';
+            fileIcon.style.color = 'var(--primary)';
 
-    ['dragleave', 'drop'].forEach(eventName => {
-        dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false);
-    });
-
-    dropZone.addEventListener('drop', handleDrop, false);
-
-    function handleDrop(e) {
-        const dt = e.dataTransfer;
-        const files = dt.files;
-        fileInput.files = files; // Assign dropped files to input
-        handleFiles(files);
-    }
-
-    function handleFiles(files) {
-        if (files && files[0]) {
-            fileName.textContent = files[0].name;
-            fileName.classList.add('text-primary');
-            dropZone.style.borderColor = '#6366f1';
-            dropZone.style.backgroundColor = '#eef2ff';
-
-            // Change icon based on file type
-            if(files[0].name.endsWith('.pdf')) {
-                fileIcon.className = 'fas fa-file-pdf fa-3x text-danger mb-3';
-            } else if(files[0].name.match(/\.(doc|docx)$/)) {
-                fileIcon.className = 'fas fa-file-word fa-3x text-primary mb-3';
-            } else {
-                fileIcon.className = 'fas fa-file-alt fa-3x text-dark mb-3';
-            }
+            submitBtn.disabled = false;
+            submitBtn.style.opacity = '1';
+            submitBtn.style.cursor = 'pointer';
         }
-    }
+    });
 
-    // 3. Button Loading State
-    uploadForm.addEventListener('submit', function() {
-        submitBtn.disabled = true;
-        submitBtn.style.opacity = "0.8";
-        btnText.textContent = "Analyzing Document...";
-        btnSpinner.classList.remove('d-none');
+    document.getElementById('uploadForm').addEventListener('submit', () => {
+        if(!fileInput.files.length) return;
+        document.getElementById('scannerOverlay').classList.add('active');
+    });
+
+    // 4. Drag & Drop Interactions
+    ['dragenter', 'dragover'].forEach(e => dropZone.addEventListener(e, (ev) => {
+        ev.preventDefault();
+        dropZone.classList.add('dragover');
+    }));
+    ['dragleave', 'drop'].forEach(e => dropZone.addEventListener(e, (ev) => {
+        ev.preventDefault();
+        dropZone.classList.remove('dragover');
+    }));
+    dropZone.addEventListener('drop', (e) => {
+        fileInput.files = e.dataTransfer.files;
+        fileInput.dispatchEvent(new Event('change'));
     });
 </script>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
